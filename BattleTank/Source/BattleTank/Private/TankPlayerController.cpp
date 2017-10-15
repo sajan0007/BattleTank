@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TankPlayerController.h"
+#include "Runtime/Engine/Classes/GameFramework/PlayerController.h"
 
 
 void ATankPlayerController::BeginPlay()
@@ -51,7 +52,12 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector & OutHitLocation) con
 	//UE_LOG(LogTemp, Warning, TEXT("ScreenLocation: %s"), *ScreenLocation.ToString());
 
 	//"De-project" the scrren position of the crosshair to a world direction
-	//Line-trace alogn that look direction, and see what we hit (up to max range)
+	FVector LookDirection;
+	if (GetLookDirection(ScreenLocation, LookDirection))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ScreenLocation: %s"), *LookDirection.ToString());
+	}
+	//Line-trace alogn that LookDirection, and see what we hit (up to max range)
 	return true;
 }
 
@@ -59,5 +65,19 @@ bool ATankPlayerController::GetSightRayHitLocation(FVector & OutHitLocation) con
 ATank* ATankPlayerController::GetControlledTank() const
 {
 	return Cast<ATank>(GetPawn());
+}
+
+bool ATankPlayerController::GetLookDirection(FVector2D ScreenLocation, FVector& LookDirection) const
+{
+	FVector CameraWorldLocation; //To be discarded
+	return DeprojectScreenPositionToWorld(
+		ScreenLocation.X,
+		ScreenLocation.Y,
+		CameraWorldLocation,
+		LookDirection
+	);
+
+	
+
 }
 
