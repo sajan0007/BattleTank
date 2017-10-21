@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "TankAimingComponent.h"
+#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 
 
 // Sets default values for this component's properties
@@ -19,28 +20,43 @@ void UTankAimingComponent::SetBarrelReference(UStaticMeshComponent* BarrelToSet)
 	Barrel = BarrelToSet;
 }
 
-// Called when the game starts
-void UTankAimingComponent::BeginPlay()
-{
-	Super::BeginPlay();
 
-	// ...
+void UTankAimingComponent::AimAt(FVector HitLocation, float LaunchSpeed)
+{
+	if (!Barrel) { return; }
+
+	FVector OutLaunchVelocity;
+	FVector StartLocation = Barrel->GetSocketLocation(FName("Projectile"));
+
+
+	//Calculate OutLaunchVelocity
+	bool bHaveAimSolution = UGameplayStatics::SuggestProjectileVelocity(
+		this,
+		OutLaunchVelocity,
+		StartLocation,
+		HitLocation,
+		LaunchSpeed,
+		ESuggestProjVelocityTraceOption::DoNotTrace
+	);
+
+	if(bHaveAimSolution)
+	{
+		auto AimDirection = OutLaunchVelocity.GetSafeNormal();
+		MoveBarrelTowards(AimDirection);
+	}
+	//if no solution found do noting
+
 	
 }
 
-
-// Called every frame
-void UTankAimingComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UTankAimingComponent::MoveBarrelTowards(FVector AimDirection)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+//work-out difference between current barrel rotation ,and AimDirection
+	auto BarrelRotator = Barrel->GetForwardVector().Rotation(); 
+	auto AimAsRotator = AimDirection.Rotation();
+	UE_LOG(LogTemp, Warning, TEXT("AimAsRotator: % s"), *AimAsRotator.ToString());
 
-	// ...
-}
-
-void UTankAimingComponent::AimAt(FVector HitLocation)
-{
-	auto OurTankName = GetOwner()->GetName();
-	auto BarrelLocation = Barrel->GetComponentLocation().ToString();
-	UE_LOG(LogTemp, Warning, TEXT("%s aiming at  %s from %s"), *OurTankName, *HitLocation.ToString(), *BarrelLocation);
+//Move the barrel the right omount this frame
+//Given a max e;evatopm s[eed. amd the fra,e time
 }
 
